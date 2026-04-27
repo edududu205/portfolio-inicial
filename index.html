@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Meu Portfólio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h1>Meu Portfólio</h1>
+<button onclick="toggleTema()" class="tema-btn">🌙 / ☀️</button>
+
+<div class="upload-box">
+  
+<select id="categoria">
+    <option value="Desenho">Desenho</option>
+    <option value="Arte Digital">Arte Digital</option>
+    <option value="Ideia">Ideia</option>
+    <option value="Referência">Referência</option>
+</select>
+
+<label class="file-upload">
+        Escolher imagem
+    <input type="file" id="imagem">
+</label>
+    <input type="text" id="descricao" placeholder="Descrição da arte">
+    <button onclick="salvar()">Salvar</button>
+</div>
+
+<div class="filtros">
+    <button onclick="filtrar('todas')">Todas</button>
+    <button onclick="filtrar('Desenho')">Desenho</button>
+    <button onclick="filtrar('Arte Digital')">Arte</button>
+    <button onclick="filtrar('Ideia')">Ideia</button>
+    <button onclick="filtrar('Referência')">Referência</button>
+</div>
+
+<div class="galeria" id="galeria"></div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
