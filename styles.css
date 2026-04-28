@@ -17,6 +17,11 @@ body.light-mode {
     --input-border: #333;
 }
 
+* {
+    font-family: 'Poppins', sans-serif;
+}
+
+
 body {
     background: var(--bg);
     color: var(--text);
@@ -55,9 +60,21 @@ h1 span {
     opacity: 0.8;
 }
 
-.upload-box {
-    margin-bottom: 20px;
-    border-radius: 50px;
+.upload-box button {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 20px; /* igual aos outros botões */
+    padding: 3px 5px;   /* igual filtros */
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.upload-box button:hover {
+    filter: brightness(0.85);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1px);
 }
 
 input:not([type="file"]) {
@@ -82,8 +99,13 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    background: #00cc6a;
+button:hover,
+.upload-box button:hover,
+.filtros button:hover,
+.tema-btn:hover {
+    filter: brightness(0.85);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1px);
 }
 
 /* ===== PINTEREST REAL ===== */
@@ -159,6 +181,7 @@ button:hover {
     margin: 0;
     padding: 8px;
     background: rgba(0, 0, 0, 0.7);
+    color: #fff;
     opacity: 0;
     transition: 0.3s;
 }
@@ -187,17 +210,32 @@ button:hover {
 }
 
 .filtros button {
-    background: #222;
-    color: #00ff88;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
     border-radius: 20px;
     padding: 8px 15px;
-    margin: 5px;
-    border: 1px solid #00ff88;
+    margin: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transition: 0.3s ;
 }
 
 .filtros button:hover {
-    background: #00ff88;
-    color: #000;
+    background: var(--accent);
+    color: var(--bg);
+    transition: 0.3s;
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.filtros button.ativo {
+    background: var(--bg);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    transform: scale(1.05);
 }
 
 .tema-btn {
@@ -221,9 +259,15 @@ button:hover {
     cursor: pointer;
     margin: 5px;
     font-size: 14px;
+    transition: all 0.2s ease;
 }
 
-/* esconde o input real */
+.file-upload:hover {
+    filter: brightness(0.85);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1px);
+}
+
 .file-upload input {
     display: none;
 }
