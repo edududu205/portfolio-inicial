@@ -1,46 +1,100 @@
-let dados = JSON.parse(localStorage.getItem("portfolio")) || [];
+const SUPABASE_URL = "https://friosuxybjmchgfhlcwk.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyaW9zdXh5YmptY2hnZmhsY3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODY1MzgsImV4cCI6MjA5Mjg2MjUzOH0.ghmEI9sxmtoiMhU_04n70VgotYRPVt6Ruxr_JpGFIqI"; // mantém a sua
+
+// ✅ inicialização correta
+const { createClient } = supabase;
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let filtroAtual = "todas";
 
-function salvar(){
-    let file = document.getElementById("imagem").files[0];
-    let desc = document.getElementById("descricao").value;
-    let categoria = document.getElementById("categoria").value;
-
-    if(!file){
-        alert("Selecione uma imagem!");
-        return;
-    }
-
-    let reader = new FileReader();
-
-    reader.onload = function(e){
-        dados.push({
-    img: e.target.result,
-    descricao: desc,
-    categoria: categoria
+document.getElementById("imagem").addEventListener("change", function(){
+    let file = this.files[0];
+    document.getElementById("nomeArquivo").innerText = file ? file.name : "";
 });
 
-        localStorage.setItem("portfolio", JSON.stringify(dados));
+document.getElementById("descricao").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+        e.preventDefault(); // evita comportamento padrão
+        salvar();
+    }
+});
+
+// ================= SALVAR =================
+async function salvar(){
+    try {
+        let file = document.getElementById("imagem").files[0];
+        let desc = document.getElementById("descricao").value;
+
+        if(!file) return alert("Selecione uma imagem!");
+
+        let nome = Date.now() + "_" + file.name;
+
+        // 📦 upload da imagem
+        let upload = await client.storage
+            .from("imagens")
+            .upload(nome, file);
+
+        if(upload.error){
+            console.log("Erro upload:", upload.error);
+            return;
+        }
+
+        // 🔗 pegar URL pública
+        let { data } = client.storage
+            .from("imagens")
+            .getPublicUrl(nome);
+
+        let url = data.publicUrl;
+
+        console.log("URL:", url);
+
+        // 💾 salvar no banco
+        let insert = await client.from("portfolio").insert([
+            {
+                img: url,
+                descricao: desc
+            }
+        ]);
+
+        console.log("INSERT:", insert);
+
+        if(insert.error){
+            console.log("Erro insert:", insert.error);
+            return;
+        }
 
         carregar();
 
-        // limpar campos
-        document.getElementById("imagem").value = "";
-        document.getElementById("descricao").value = "";
+    } catch (err) {
+        console.log("Erro geral:", err);
     }
 
-    reader.readAsDataURL(file);
+    document.getElementById("imagem").value = "";
+document.getElementById("nomeArquivo").innerText = "";
+document.getElementById("descricao").value = "";
+
 }
 
-function filtrar(cat){
+// ================= FILTRO ===============
+
+function filtrar(cat, btn){
     filtroAtual = cat;
     carregar();
+
+    // remove ativo de todos
+    document.querySelectorAll(".filtros button")
+        .forEach(b => b.classList.remove("ativo"));
+
+    // adiciona no clicado
+    if(btn){
+        btn.classList.add("ativo");
+    }
 }
 
+// ================= TEMA =================
 function toggleTema(){
     document.body.classList.toggle("light-mode");
 
-    // salvar preferência
     if(document.body.classList.contains("light-mode")){
         localStorage.setItem("tema", "light");
     } else {
@@ -48,23 +102,34 @@ function toggleTema(){
     }
 }
 
-function carregar(){
+// ================= CARREGAR =================
+async function carregar(){
     let galeria = document.getElementById("galeria");
     galeria.innerHTML = "";
 
-    dados.forEach((item, index) => {
+    let { data, error } = await client.from("portfolio").select("*");
 
-        if(
+    if(error){
+        console.log("Erro ao carregar:", error);
+        return;
+    }
+
+    (data || []).forEach((item) => {
+
+        if (
             filtroAtual === "todas" ||
-            item.categoria === filtroAtual
-        ){
+            (item.descricao || "")
+                .toLowerCase()
+                .split(" ")
+                .includes(filtroAtual)
+    
+        ) {
             galeria.innerHTML += `
                 <div class="card">
                     <img src="${item.img}">
-                    
+                   <button onclick="excluir('${item.id}', '${item.img}')">X</button>
                     <div class="overlay">
-                        <button onclick="excluir(${index})">🗑</button>
-                        <p>${item.descricao}</p>
+                        <p>${item.descricao || ""}</p>
                     </div>
                 </div>
             `;
@@ -72,21 +137,54 @@ function carregar(){
 
     });
 }
+// ================ EXCLUIR =================
+async function excluir(id, url){
+    if(!confirm("Excluir imagem?")) return;
 
-function excluir(index){
-    if(confirm("Tem certeza que deseja excluir?")){
-        dados.splice(index, 1); // remove do array
-        localStorage.setItem("portfolio", JSON.stringify(dados)); // atualiza
-        carregar(); // recarrega a galeria
+    console.log("ID:", id);
+    console.log("URL:", url);
+
+    // 🔥 DELETE NO BANCO
+    let { error: erroDB } = await client
+        .from("portfolio")
+        .delete()
+        .eq("id", id);
+
+    if(erroDB){
+        console.log("Erro ao deletar no banco:", erroDB);
+        alert("Erro ao deletar no banco");
+        return;
     }
-}
 
-// carregar tema salvo
+    // 🔥 PEGAR NOME DO ARQUIVO
+    if(url){
+        let nomeArquivo = url.split("/").pop();
+    
+        await client.storage
+            .from("imagens")
+            .remove([nomeArquivo]);
+    }
+
+    // 🔥 DELETE NO STORAGE
+    let { error: erroStorage } = await client
+        .storage
+        .from("imagens")
+        .remove([nomeArquivo]);
+
+    if(erroStorage){
+        console.log("Erro ao deletar imagem:", erroStorage);
+    }
+
+    console.log("Deletado com sucesso");
+
+    carregar();
+}
+// ================= TEMA SALVO =================
 let temaSalvo = localStorage.getItem("tema");
 
 if(temaSalvo === "light"){
     document.body.classList.add("light-mode");
 }
 
-// carregar ao abrir o site
+// ================= START =================
 carregar();
