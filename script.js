@@ -4,7 +4,8 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ✅ inicialização correta
 const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+let imagemAtualId = null;
+let imagemAtualUrl = null;
 let filtroAtual = "todas";
 
 document.getElementById("imagem").addEventListener("change", function(){
@@ -117,16 +118,14 @@ async function carregar(){
     (data || []).forEach((item) => {
 
         if (
-            filtroAtual === "todas" ||
-            (item.descricao || "")
-                .toLowerCase()
-                .split(" ")
-                .includes(filtroAtual)
-    
-        ) {
+    filtroAtual === "todas" ||
+    (item.descricao || "")
+        .toLowerCase()
+        .includes(filtroAtual)
+         ) {
             galeria.innerHTML += `
                 <div class="card">
-                    <img src="${item.img}">
+                   <img src="${item.img}" onclick="abrirModal('${item.img}', '${item.descricao || ""}', '${item.id}')">
                    <button onclick="excluir('${item.id}', '${item.img}')">X</button>
                     <div class="overlay">
                         <p>${item.descricao || ""}</p>
@@ -137,6 +136,71 @@ async function carregar(){
 
     });
 }
+
+function iniciarApp(){
+
+    document.getElementById("imagem").addEventListener("change", function(){
+        let file = this.files[0];
+        document.getElementById("nomeArquivo").innerText = file ? file.name : "";
+    });
+
+    document.getElementById("descricao").addEventListener("keydown", function(e){
+        if(e.key === "Enter"){
+            e.preventDefault();
+            salvar();
+        }
+    });
+
+    document.getElementById("btnExcluir").onclick = function(){
+        if(imagemAtualId){
+            excluir(imagemAtualId, imagemAtualUrl);
+            fecharModal();
+        }
+    };
+
+    
+    document.getElementById("btnExcluir").onclick = function(){
+        if(imagemAtualId){
+            excluir(imagemAtualId, imagemAtualUrl);
+            fecharModal();
+         }
+    };
+
+    // fechar botão X
+    document.getElementById("fechar").onclick = function(){
+        fecharModal();
+    };
+
+    // clicar fora fecha
+    document.getElementById("modal").onclick = function(e){
+        if(e.target.id === "modal"){
+            fecharModal();
+        }
+    };
+
+    filtroAtual = "todas";
+
+    carregar(); // 🚀 ESSA LINHA É O QUE VOCÊ QUER
+}
+
+// ================ ABRIR IMAGEM ==============
+function abrirModal(img, desc, id){
+    let modal = document.getElementById("modal");
+
+    document.getElementById("modal-img").src = img;
+    document.getElementById("modal-desc").innerText = desc;
+
+    imagemAtualId = id;
+    imagemAtualUrl = img;
+
+    modal.classList.add("ativo");
+}
+
+// ================ FECHAR IMAGEM ==============
+function fecharModal(){
+    document.getElementById("modal").classList.remove("ativo");
+}
+
 // ================ EXCLUIR =================
 async function excluir(id, url){
     if(!confirm("Excluir imagem?")) return;
@@ -165,16 +229,6 @@ async function excluir(id, url){
             .remove([nomeArquivo]);
     }
 
-    // 🔥 DELETE NO STORAGE
-    let { error: erroStorage } = await client
-        .storage
-        .from("imagens")
-        .remove([nomeArquivo]);
-
-    if(erroStorage){
-        console.log("Erro ao deletar imagem:", erroStorage);
-    }
-
     console.log("Deletado com sucesso");
 
     carregar();
@@ -186,5 +240,4 @@ if(temaSalvo === "light"){
     document.body.classList.add("light-mode");
 }
 
-// ================= START =================
-carregar();
+document.addEventListener("DOMContentLoaded", iniciarApp);
