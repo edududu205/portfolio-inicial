@@ -207,6 +207,26 @@ button:hover,
     padding: 5px;
 }
 
+/* ESCONDE SEMPRE (PC como padrão) */
+#btnExcluir {
+    display: none;
+}
+
+/* SÓ NO CELULAR */
+@media (max-width: 600px) {
+    #btnExcluir {
+        display: block !important;
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 20px;
+        background-color: red !important;
+        color: white !important;
+        border: none;
+        width: 80%;
+        max-width: 300px;
+    }
+}
+
 .card button:hover {
     background: darkred;
     transform: translateY(-3px);
