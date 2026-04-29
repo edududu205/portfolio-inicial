@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Dki & Déh Studio </title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -34,6 +35,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="script.js"></script>
+
+<div id="modal" class="modal">
+    <span id="fechar" onclick="fecharModal()">&times;</span>
+    <img id="modal-img">
+    <p id="modal-desc"></p>
+    <button id="btnExcluir">Excluir</button>
+</div>
 
 </body>
 </html>
